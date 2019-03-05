@@ -1,0 +1,98 @@
+
+Lmod is automatically replacing "intel/17.0.4" with "gcc/7.3.0".
+
+
+Inactive Modules:
+  1) python
+
+The following have been reloaded with a version change:
+  1) impi/17.0.3 => impi/18.0.2
+
+/tmp/slurmd/job22746/slurm_script: line 15: ./render: No such file or directory
+
+--------------
+Running tests on c227-117.maverick2.tacc.utexas.edu
+
+--------------
+
+Scene : rgb
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_rgb.log
+sh: ./render: No such file or directory
+Your time : 
+Reference Time: 0.2009
+
+Scene : rgby
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_rgby.log
+
+Scene : rand10k
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_rand10k.log
+sh: ./render: No such file or directory
+Your time : 
+Reference Time: 2.7050
+
+Scene : rand100k
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_rand100k.log
+sh: ./render: No such file or directory
+Your time : 
+Reference Time: 25.4165
+
+Scene : biglittle
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_biglittle.log
+sh: ./render: No such file or directory
+Your time : 
+Reference Time: 17.4745
+
+Scene : littlebig
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_littlebig.log
+
+Scene : pattern
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_pattern.log
+sh: ./render: No such file or directory
+Your time : 
+Reference Time: 0.3138
+
+Scene : bouncingballs
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_bouncingballs.log
+
+Scene : hypnosis
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_hypnosis.log
+
+Scene : fireworks
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_fireworks.log
+
+Scene : snow
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_snow.log
+
+Scene : snowsingle
+sh: ./render: No such file or directory
+Correctness failed ... Check ./logs/correctness_snowsingle.log
+sh: ./render: No such file or directory
+Your time : 
+Reference Time: 11.7199
+
+------------
+Score table:
+------------
+-------------------------------------------------------------------------
+| Scene Name      | Fast Time (Tf)  | Your Time (T)   | Score           |
+-------------------------------------------------------------------------
+| rgb             | 0.2009          |  (F)            | 0               |
+| rand10k         | 2.7050          |  (F)            | 0               |
+| rand100k        | 25.4165         |  (F)            | 0               |
+| pattern         | 0.3138          |  (F)            | 0               |
+| snowsingle      | 11.7199         |  (F)            | 0               |
+| biglittle       | 17.4745         |  (F)            | 0               |
+-------------------------------------------------------------------------
+|                                   | Total score:    | 0/72            |
+-------------------------------------------------------------------------
