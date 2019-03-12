@@ -1,5 +1,5 @@
 __inline__ __device__ void
-scan1(int tid, uint* s_out, int NUM_THREADS)
+scan1(int tid, uint16_t* s_out, int NUM_THREADS)
 {
 	int N=NUM_THREADS; 
 	register int t;
