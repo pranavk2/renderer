@@ -15,9 +15,13 @@
 #include "util.h"
 #include "circleBoxTest.cu_inl"
 #include "scan.cu_inl"
+#include "scan1.cu_inl"
+
 
 #define WINDOW_HEIGHT 32
 #define WINDOW_WIDTH 32
+#define LOG_WINDOW_WIDTH 5
+#define LOG_WINDOW_HEIGHT 5
 #define NUM_THREADS 1024
 #define CIRCLES_EACH_TIME NUM_THREADS
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -494,22 +498,22 @@ __global__ void kernelRenderWindowOfPixelsOpt1(int windowsAlongWidth, int window
 	float invWidth = 1.f / imageWidth;
 	float invHeight = 1.f / imageHeight;
 	__shared__ uint s[NUM_THREADS];
-	__shared__ volatile uint temp[2*NUM_THREADS];
+//	__shared__ volatile uint temp[NUM_THREADS<<1];
 	__shared__ uint s_out[NUM_THREADS];
 	__shared__ uint listOfCircles[NUM_THREADS];
 	float3 p, pFinal;		
 	float rad, radFinal;
 	float4* imgPtr;
 	int len, circleIndex, circleIndex3, circleIndexFinal, circleIndexFinal3;
-	int windowLeft = blockIdx.x * WINDOW_WIDTH;
+	int windowLeft = blockIdx.x << LOG_WINDOW_WIDTH;
 	int windowRight = windowLeft + WINDOW_WIDTH;
-	int windowTop = blockIdx.y * WINDOW_HEIGHT;
+	int windowTop = blockIdx.y << LOG_WINDOW_HEIGHT;
 	int windowBottom = windowTop + WINDOW_HEIGHT;
 	if (windowBottom > imageHeight)
 		windowBottom = imageHeight;
 	if (windowRight > imageWidth)
 		windowRight = imageWidth;
-	int tid = threadIdx.x ;
+	int tid = threadIdx.x + blockDim.x * threadIdx.y;
 	int numCircles = cuConstRendererParams.numCircles ;
 	for (int i=0; i < numCircles; i += CIRCLES_EACH_TIME)
 	{
@@ -525,17 +529,21 @@ __global__ void kernelRenderWindowOfPixelsOpt1(int windowsAlongWidth, int window
 			rad = cuConstRendererParams.radius[circleIndex] ;
 			s[tid] = circleInBoxConservative(p.x*imageWidth, p.y*imageHeight, rad*imageHeight, windowLeft, windowRight, windowBottom, windowTop) ;
 		}
+		s_out[tid] = s[tid];
 		__syncthreads();
-		scan(tid, s, s_out, temp, NUM_THREADS);
+		//scan(tid, s, s_out, temp, NUM_THREADS);
+		scan1(tid, s_out, NUM_THREADS);
+ 	
 		if (s[tid] == 1)
 		{
 			listOfCircles[s_out[tid]] = circleIndex ;
 		}
+
 		__syncthreads();
 
-		int pixelX = windowLeft + tid % WINDOW_WIDTH ;
-		int pixelY = windowTop + tid / WINDOW_WIDTH;
-		
+		int pixelX = windowLeft + (tid & (WINDOW_WIDTH-1)) ;
+		int pixelY = windowTop + (tid >> LOG_WINDOW_WIDTH);
+
 		if (pixelX < imageWidth && pixelY < imageHeight)
 		{
 			len = s[NUM_THREADS-1] + s_out[NUM_THREADS-1];
@@ -547,8 +555,8 @@ __global__ void kernelRenderWindowOfPixelsOpt1(int windowsAlongWidth, int window
 				radFinal = cuConstRendererParams.radius[circleIndexFinal];
 				imgPtr = (float4*)(&cuConstRendererParams.imageData[4 * (pixelY * imageWidth + pixelX)]) ;
 				float2 pixelCenter = make_float2(invWidth * (static_cast<float>(pixelX) + 0.5f),
-								invHeight * (static_cast<float>(pixelY) + 0.5f));
-	//			shadePixel(circleIndexFinal, pixelCenter, pFinal, imgPtr);
+						invHeight * (static_cast<float>(pixelY) + 0.5f));
+//				shadePixel(circleIndexFinal, pixelCenter, pFinal, imgPtr);
 				float diffX = pFinal.x - pixelCenter.x;
 				float diffY = pFinal.y - pixelCenter.y;
 				float pixelDist = diffX * diffX + diffY * diffY;
@@ -557,13 +565,12 @@ __global__ void kernelRenderWindowOfPixelsOpt1(int windowsAlongWidth, int window
 					continue;
 				else
 					shadePixel(circleIndexFinal, pixelCenter, pFinal, imgPtr);
-					
-		
+
 
 			}
 		}
 	}
-	
+
 }	
 
 ////////////////////////////////////////////////////////////////////////////////////////
@@ -784,8 +791,8 @@ CudaRenderer::render() {
 		//dim3 gridDim((numCircles + blockDim.x - 1) / blockDim.x);
 		dim3 gridDim((image->width + blockDim.x - 1) / blockDim.x,
 				(image->height + blockDim.y - 1) / blockDim.y);
-	
-	
+
+
 		kernelRenderWindowOfPixelsNaive<<<gridDim, blockDim>>>();
 		cudaDeviceSynchronize();
 	}
@@ -793,11 +800,12 @@ CudaRenderer::render() {
 	else {
 		int windowsAlongWidth = (image->width + WINDOW_WIDTH - 1) / WINDOW_WIDTH ;
 		int windowsAlongHeight = (image->height + WINDOW_HEIGHT - 1) / WINDOW_HEIGHT ;
-	
-		dim3 blockDim(NUM_THREADS, 1);
+
+		dim3 blockDim(WINDOW_WIDTH, WINDOW_HEIGHT);
 		dim3 gridDim(windowsAlongWidth, windowsAlongHeight);
+		printf(" WAW %d WAH %d WW %d WH %d \n",windowsAlongWidth, windowsAlongHeight, WINDOW_WIDTH, WINDOW_HEIGHT); 
 		kernelRenderWindowOfPixelsOpt1<<<gridDim, blockDim>>>(windowsAlongWidth, windowsAlongHeight);
 		cudaDeviceSynchronize();
 	}
-		
+
 }

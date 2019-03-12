@@ -1,0 +1,31 @@
+__inline__ __device__ void
+scan1(int tid, uint* s_out, int NUM_THREADS)
+{
+	int N=NUM_THREADS; 
+	register int t;
+	for(int twod=1;twod<N;twod<<=1)
+	{
+		int twod1=twod<<1;
+		if(((tid+1)%twod1)==0)
+		{
+			s_out[tid]+=s_out[tid-twod];
+		}
+		__syncthreads();
+	}
+
+	if (tid == N-1)
+		s_out[tid]=0;
+
+	for(int twod=N>>1;twod>=1;twod>>=1)
+	{
+		int twod1=twod<<1;
+		if(((tid+1)%twod1)==0)
+		{
+			t=s_out[tid-twod];
+			s_out[tid-twod]=s_out[tid];
+			s_out[tid]+=t;
+		}
+		__syncthreads();
+
+	} 
+}
